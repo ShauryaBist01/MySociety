@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Maintenance Calculation & Billing - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <a href="{{ url_for('president_dashboard') }}" class="text-decoration-none text-muted small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h2 class="fw-bold text-slate-900 mt-2 mb-1">
+                <i class="fa-solid fa-calculator text-primary me-2"></i>Maintenance Calculation & Billing Engine
+            </h2>
+            <p class="text-muted small mb-0">Automated calculation: Base Fee (₹500) + Facility Charges based on each flat's opted amenities</p>
+        </div>
+    </div>
+
+    <!-- Monthly Billing Control & Filter Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+            <div class="row align-items-center gy-3">
+                <div class="col-lg-6">
+                    <form method="POST" action="{{ url_for('generate_maintenance') }}" class="d-flex align-items-end gap-2 flex-wrap">
+                        <div>
+                            <label class="form-label text-xs fw-bold text-muted mb-1">Billing Month</label>
+                            <select name="month" class="form-select form-select-sm" style="width: 140px;">
+                                {% for m in range(1, 13) %}
+                                    <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>
+                                        Month {{ m }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs fw-bold text-muted mb-1">Year</label>
+                            <input type="number" name="year" value="{{ selected_year }}" class="form-control form-control-sm" style="width: 100px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Monthly Bills
+                        </button>
+                    </form>
+                    <small class="text-muted d-block mt-1">Generates individual bills for all registered residents based on opted facilities.</small>
+                </div>
+
+                <div class="col-lg-6">
+                    <!-- Filter Month Links -->
+                    <form method="GET" action="{{ url_for('maintenance_overview') }}" class="d-flex justify-content-lg-end align-items-end gap-2">
+                        <div>
+                            <label class="form-label text-xs fw-bold text-muted mb-1">View Month</label>
+                            <select name="month" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
+                                {% for m in range(1, 13) %}
+                                    <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>Month {{ m }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label text-xs fw-bold text-muted mb-1">View Year</label>
+                            <input type="number" name="year" value="{{ selected_year }}" class="form-control form-control-sm" style="width: 90px;" onchange="this.form.submit()">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial KPI Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card-pro stat-card-blue">
+                <div>
+                    <div class="stat-val text-primary">₹{{ "{:,.2f}".format(total_billed) }}</div>
+                    <div class="stat-lbl">Total Billed (Month {{ selected_month }})</div>
+                    <small class="text-muted">Combined maintenance dues</small>
+                </div>
+                <div class="stat-icon-wrapper icon-blue">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card-pro stat-card-green">
+                <div>
+                    <div class="stat-val text-success">₹{{ "{:,.2f}".format(total_collected) }}</div>
+                    <div class="stat-lbl">Collected / Paid</div>
+                    <small class="text-success fw-semibold"><i class="fa-solid fa-circle-check me-1"></i> Received</small>
+                </div>
+                <div class="stat-icon-wrapper icon-green">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card-pro stat-card-rose">
+                <div>
+                    <div class="stat-val text-danger">₹{{ "{:,.2f}".format(total_pending) }}</div>
+                    <div class="stat-lbl">Pending / Unpaid</div>
+                    <small class="text-danger fw-semibold"><i class="fa-solid fa-clock me-1"></i> Awaiting payment</small>
+                </div>
+                <div class="stat-icon-wrapper icon-rose">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Maintenance Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-slate-900">
+                <i class="fa-solid fa-receipt text-primary me-2"></i>Resident Maintenance Breakdown (Month {{ selected_month }}/{{ selected_year }})
+            </h5>
+            <span class="text-muted small">Base (₹500) + Facility Subscriptions</span>
+        </div>
+        <div class="card-body p-0">
+            {% if maintenance_data %}
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Flat & Resident</th>
+                                <th>Base Charge</th>
+                                <th>Facilities Opted & Fees</th>
+                                <th>Total Monthly Bill</th>
+                                <th>Payment Status</th>
+                                <th class="text-end">Payment Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in maintenance_data %}
+                            <tr>
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge bg-slate-100 text-slate-900 fw-bold border px-2 py-1 fs-6">
+                                        <i class="fa-solid fa-door-open text-primary me-1"></i>{{ item.member.flat_no or 'N/A' }}
+                                    </span>
+                                    <div class="fw-bold text-slate-900 mt-1">{{ item.member.name }}</div>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-slate-700">₹{{ "{:,.2f}".format(item.base_amount) }}</span>
+                                </td>
+                                <td>
+                                    {% if item.facilities %}
+                                        <div class="d-flex flex-wrap gap-1 mb-1">
+                                            {% for f in item.facilities %}
+                                                <span class="badge bg-slate-100 text-slate-700 border text-xs">
+                                                    {{ f.name }}: ₹{{ "{:,.0f}".format(f.monthly_cost) }}
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                        <small class="fw-bold text-primary">+₹{{ "{:,.2f}".format(item.facility_charges) }} Total</small>
+                                    {% else %}
+                                        <span class="text-muted small"><i class="fa-solid fa-minus me-1"></i>No amenities opted (₹0)</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-slate-900 fs-6">
+                                        ₹{{ "{:,.2f}".format(item.bill.total_amount if item.bill else item.calculated_total) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if item.bill %}
+                                        {% if item.bill.paid_status == 'Paid' %}
+                                            <span class="badge badge-pill-status badge-status-paid">
+                                                <i class="fa-solid fa-check"></i> Paid
+                                            </span>
+                                            {% if item.bill.paid_date %}
+                                                <div class="text-xs text-muted mt-1">{{ item.bill.paid_date[:10] }}</div>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge badge-pill-status badge-status-unpaid">
+                                                <i class="fa-solid fa-clock"></i> Unpaid
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-slate-100 text-slate-500 border text-xs">
+                                            Not Generated
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if item.bill %}
+                                        <a href="{{ url_for('toggle_payment', maintenance_id=item.bill.id) }}" class="btn btn-sm {% if item.bill.paid_status == 'Paid' %}btn-outline-warning{% else %}btn-success{% endif %} py-1 px-3 rounded-pill" title="Toggle between Paid and Unpaid">
+                                            {% if item.bill.paid_status == 'Paid' %}
+                                                <i class="fa-solid fa-rotate-left me-1"></i> Mark Unpaid
+                                            {% else %}
+                                                <i class="fa-solid fa-check me-1"></i> Mark Paid
+                                            {% endif %}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted small">Generate first</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-5 text-center text-muted">
+                    <i class="fa-solid fa-calculator fs-1 text-slate-300 mb-3 d-block"></i>
+                    <h5 class="fw-bold text-slate-700">No Resident Data Available</h5>
+                    <p class="small text-muted mb-0">Once members register with their flat numbers, their maintenance bills will show here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

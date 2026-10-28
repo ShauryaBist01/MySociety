@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block title %}Flat Status (Rent & Empty) - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <a href="{{ url_for('president_dashboard') }}" class="text-decoration-none text-muted small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h2 class="fw-bold text-slate-900 mt-2 mb-1">
+                <i class="fa-solid fa-house-chimney-window text-warning me-2"></i>Flat Occupancy & Status Report
+            </h2>
+            <p class="text-muted small mb-0">Detailed classification of all society flats: <strong>On Rent</strong>, <strong>Owned</strong>, and <strong>Empty / Unsold</strong></p>
+        </div>
+
+        <a href="{{ url_for('manage_members') }}" class="btn btn-outline-primary rounded-pill btn-sm px-3">
+            <i class="fa-solid fa-user-pen me-1"></i> Update Flat Statuses
+        </a>
+    </div>
+
+    <!-- 3 Summary Metrics -->
+    <div class="row g-3 mb-4">
+        <!-- Owned Metric -->
+        <div class="col-md-4">
+            <div class="stat-card-pro stat-card-blue">
+                <div>
+                    <div class="stat-val text-primary">{{ owned|length }}</div>
+                    <div class="stat-lbl">Owned Flats</div>
+                    <small class="text-muted">Owner occupied</small>
+                </div>
+                <div class="stat-icon-wrapper icon-blue">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rented Metric (Requirement 5) -->
+        <div class="col-md-4">
+            <div class="stat-card-pro stat-card-amber">
+                <div>
+                    <div class="stat-val text-warning">{{ rented|length }}</div>
+                    <div class="stat-lbl">Flats On Rent</div>
+                    <small class="text-muted">Tenant occupied</small>
+                </div>
+                <div class="stat-icon-wrapper icon-amber">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty Metric (Requirement 5) -->
+        <div class="col-md-4">
+            <div class="stat-card-pro stat-card-purple">
+                <div>
+                    <div class="stat-val text-secondary">{{ empty|length }}</div>
+                    <div class="stat-lbl">Empty / Unsold</div>
+                    <small class="text-muted">Vacant / Unoccupied</small>
+                </div>
+                <div class="stat-icon-wrapper icon-purple">
+                    <i class="fa-solid fa-door-closed"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Flats On Rent -->
+    <div class="card shadow-sm border-0 mb-4" id="rentedSection">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge badge-pill-status badge-status-rented fs-6">
+                    <i class="fa-solid fa-key"></i> Flats On Rent ({{ rented|length }})
+                </span>
+            </div>
+            <span class="text-muted small">Tenants residing under lease / rental agreements</span>
+        </div>
+        <div class="card-body p-0">
+            {% if rented %}
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Flat Number</th>
+                                <th>Tenant / Occupant Name</th>
+                                <th>Contact Details</th>
+                                <th>Amenities Opted</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in rented %}
+                            <tr>
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge bg-slate-100 text-slate-900 fw-bold border px-2 py-1 fs-6">
+                                        <i class="fa-solid fa-door-open text-warning me-1"></i>{{ r.flat_no or 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-slate-900">{{ r.name }}</div>
+                                </td>
+                                <td>
+                                    <div class="small text-slate-700"><i class="fa-solid fa-phone me-1 text-muted"></i>{{ r.phone or 'No phone' }}</div>
+                                    <div class="text-xs text-muted"><i class="fa-solid fa-envelope me-1"></i>{{ r.email }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 text-xs">
+                                        <i class="fa-solid fa-dumbbell me-1"></i>{{ r.facility_count|default(0) }} Opted
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-pill-status badge-status-rented">On Rent</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="fa-solid fa-key fs-2 text-slate-300 mb-2 d-block"></i>
+                    No flats currently marked as rented.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 2: Empty / Unsold Flats -->
+    <div class="card shadow-sm border-0 mb-4" id="emptySection">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge badge-pill-status badge-status-empty fs-6">
+                    <i class="fa-solid fa-door-closed"></i> Empty / Unsold Flats ({{ empty|length }})
+                </span>
+            </div>
+            <span class="text-muted small">Flats currently vacant or held by builder/investors</span>
+        </div>
+        <div class="card-body p-0">
+            {% if empty %}
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Flat Number</th>
+                                <th>Registered Owner / Contact</th>
+                                <th>Contact Phone</th>
+                                <th>Status</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in empty %}
+                            <tr>
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge bg-slate-100 text-slate-900 fw-bold border px-2 py-1 fs-6">
+                                        <i class="fa-solid fa-door-open text-secondary me-1"></i>{{ e.flat_no or 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-slate-900">{{ e.name }}</div>
+                                    <small class="text-muted">{{ e.email }}</small>
+                                </td>
+                                <td>
+                                    <span class="text-muted small"><i class="fa-solid fa-phone me-1"></i>{{ e.phone or 'N/A' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-pill-status badge-status-empty">Empty / Unsold</span>
+                                </td>
+                                <td class="text-muted small">
+                                    Base maintenance applies to owner
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="fa-solid fa-building-circle-check fs-2 text-success mb-2 d-block"></i>
+                    No empty or unsold flats in the society! 100% occupied.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 3: Owned Flats -->
+    <div class="card shadow-sm border-0 mb-4" id="ownedSection">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge badge-pill-status badge-status-owned fs-6">
+                    <i class="fa-solid fa-user-check"></i> Owned Flats ({{ owned|length }})
+                </span>
+            </div>
+            <span class="text-muted small">Occupied by property owners</span>
+        </div>
+        <div class="card-body p-0">
+            {% if owned %}
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Flat Number</th>
+                                <th>Owner Name</th>
+                                <th>Contact Phone</th>
+                                <th>Email Address</th>
+                                <th>Amenities Opted</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for o in owned %}
+                            <tr>
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge bg-slate-100 text-slate-900 fw-bold border px-2 py-1 fs-6">
+                                        <i class="fa-solid fa-door-open text-primary me-1"></i>{{ o.flat_no or 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-slate-900">{{ o.name }}</div>
+                                </td>
+                                <td>
+                                    <span class="text-muted small"><i class="fa-solid fa-phone me-1"></i>{{ o.phone or 'N/A' }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted small">{{ o.email }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 text-xs">
+                                        <i class="fa-solid fa-dumbbell me-1"></i>{{ o.facility_count|default(0) }} Opted
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-pill-status badge-status-owned">Owned</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    No owned flats listed yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

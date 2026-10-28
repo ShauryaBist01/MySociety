@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Raise Complaint - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <a href="{{ url_for('member_dashboard') }}" class="text-decoration-none text-muted small">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+        <h2 class="fw-bold text-slate-900 mt-2 mb-1">
+            <i class="fa-solid fa-circle-exclamation text-warning me-2"></i>Raise Facility Complaint / Ticket
+        </h2>
+        <p class="text-muted small">Report issues regarding society amenities (Swimming pool, Gym, Parking, Lifts) directly to the President</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Complaint Form Column -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-slate-900">
+                        <i class="fa-solid fa-pen-clip text-primary me-2"></i>Ticket Details
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('raise_complaint') }}">
+                        <div class="mb-3">
+                            <label for="facility_id" class="form-label">Related Facility / Amenity</label>
+                            <select class="form-select" id="facility_id" name="facility_id">
+                                <option value="">General Issue (Common area, Security, Lifts, Lighting)</option>
+                                {% for f in facilities %}
+                                    <option value="{{ f.id }}">{{ f.name }} (₹{{ f.monthly_cost|int }}/mo)</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Select the specific amenity experiencing issues, or leave as General.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Subject / Issue Summary <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-slate-50 border-end-0 text-muted"><i class="fa-solid fa-heading"></i></span>
+                                <input type="text" class="form-control border-start-0" id="subject" name="subject" placeholder="e.g. Gym treadmill belt slipping, Pool filter noisy" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Detailed Description <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="5" placeholder="Describe the problem in detail (location, when noticed, impact)..." required></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ url_for('my_complaints') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                                View Previous Tickets
+                            </a>
+                            <button type="submit" class="btn btn-warning rounded-pill px-4 shadow text-white fw-bold">
+                                <i class="fa-solid fa-paper-plane me-1"></i> Submit Complaint Ticket
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Column -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 mb-4 bg-slate-50">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-slate-900 mb-3"><i class="fa-solid fa-shield-halved text-primary me-2"></i>How Complaint Resolution Works</h6>
+                    <ul class="list-unstyled small text-muted mb-0 d-grid gap-3">
+                        <li class="d-flex gap-2">
+                            <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                            <span>Tickets are sent directly to the Society President's dashboard.</span>
+                        </li>
+                        <li class="d-flex gap-2">
+                            <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                            <span>The president reviews and assigns a maintenance vendor or technician.</span>
+                        </li>
+                        <li class="d-flex gap-2">
+                            <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                            <span>You can track status (Pending &rarr; In Progress &rarr; Resolved) and see official replies.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 text-center">
+                    <div class="avatar-circle mx-auto mb-2 icon-blue" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                        <i class="fa-solid fa-phone-volume"></i>
+                    </div>
+                    <h6 class="fw-bold text-slate-900 mb-1">Emergency Issue?</h6>
+                    <p class="text-muted small mb-0">For water line bursts or lift entrapment, contact the security desk or president immediately.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Facility Availment by Flat - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <a href="{{ url_for('president_dashboard') }}" class="text-decoration-none text-muted small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h2 class="fw-bold text-slate-900 mt-2 mb-1">
+                <i class="fa-solid fa-list-check text-info me-2"></i>Facility Availment Report (Flat-by-Flat)
+            </h2>
+            <p class="text-muted small mb-0">Complete audit: Which facility has been availed by which flat and resident</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('manage_facilities') }}" class="btn btn-outline-primary rounded-pill btn-sm px-3">
+                <i class="fa-solid fa-gear me-1"></i> Manage Facilities
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary KPI Header Strip -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="p-3 bg-white rounded-4 shadow-sm border border-slate-200 d-flex align-items-center gap-3">
+                <div class="stat-icon-wrapper icon-blue">
+                    <i class="fa-solid fa-dumbbell"></i>
+                </div>
+                <div>
+                    <div class="stat-val fs-3">{{ facility_data|length }}</div>
+                    <div class="stat-lbl">Active Amenities</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-white rounded-4 shadow-sm border border-slate-200 d-flex align-items-center gap-3">
+                <div class="stat-icon-wrapper icon-green">
+                    <i class="fa-solid fa-door-open"></i>
+                </div>
+                <div>
+                    <div class="stat-val fs-3">{{ total_opted_count }}</div>
+                    <div class="stat-lbl">Flat Subscriptions</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-white rounded-4 shadow-sm border border-slate-200 d-flex align-items-center gap-3">
+                <div class="stat-icon-wrapper icon-purple">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+                <div>
+                    <div class="stat-val fs-3">₹{{ "{:,.2f}".format(total_facility_revenue) }}</div>
+                    <div class="stat-lbl">Monthly Facility Charges</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Facility Breakdown Cards -->
+    {% if facility_data %}
+        {% for item in facility_data %}
+        <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="card-header bg-slate-50 py-3 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="avatar-circle icon-blue" style="width: 36px; height: 36px;">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-slate-900">{{ item.facility.name }}</h5>
+                        <span class="text-xs text-muted">₹{{ "{:,.2f}".format(item.facility.monthly_cost) }} / month per flat</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fs-6">
+                        <i class="fa-solid fa-users me-1"></i> {{ item.user_count }} Flats Subscribed
+                    </span>
+                    <span class="badge bg-emerald-subtle text-emerald rounded-pill px-3 py-1 fs-6">
+                        ₹{{ "{:,.2f}".format(item.revenue) }} / mo
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                {% if item.users %}
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Flat No</th>
+                                    <th>Resident Name</th>
+                                    <th>Contact Phone</th>
+                                    <th>Occupancy Status</th>
+                                    <th>Subscribed On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in item.users %}
+                                <tr>
+                                    <td class="text-muted">{{ loop.index }}</td>
+                                    <td>
+                                        <span class="badge bg-slate-100 text-slate-900 fw-bold border px-2 py-1 fs-6">
+                                            <i class="fa-solid fa-door-open text-primary me-1"></i>{{ u.flat_no or 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-slate-900">{{ u.name }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted small"><i class="fa-solid fa-phone me-1"></i>{{ u.phone or 'N/A' }}</span>
+                                    </td>
+                                    <td>
+                                        {% if u.flat_status == 'owned' %}
+                                            <span class="badge badge-pill-status badge-status-owned"><i class="fa-solid fa-user-check"></i> Owned</span>
+                                        {% elif u.flat_status == 'rented' %}
+                                            <span class="badge badge-pill-status badge-status-rented"><i class="fa-solid fa-key"></i> Rented</span>
+                                        {% else %}
+                                            <span class="badge badge-pill-status badge-status-empty"><i class="fa-solid fa-door-closed"></i> Empty</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">
+                                        <i class="fa-solid fa-calendar-check me-1 text-success"></i>{{ u.availed_date[:10] }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fa-solid fa-info-circle text-slate-400 me-1"></i> No residents have opted into this facility yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card p-5 text-center text-muted border-0 shadow-sm">
+            <i class="fa-solid fa-dumbbell fs-1 text-slate-300 mb-3 d-block"></i>
+            <h5 class="fw-bold text-slate-700">No Facilities Configured</h5>
+            <p class="small text-muted mb-3">Add facilities first to view which flats are availing them.</p>
+            <div>
+                <a href="{{ url_for('manage_facilities') }}" class="btn btn-primary rounded-pill px-4">
+                    <i class="fa-solid fa-plus me-1"></i> Add Society Facilities
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

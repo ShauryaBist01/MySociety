@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Complaints - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <a href="{{ url_for('president_dashboard') }}" class="text-decoration-none text-muted small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h2 class="fw-bold text-slate-900 mt-2 mb-1">
+                <i class="fa-solid fa-comments text-danger me-2"></i>Resident Facility Complaints
+            </h2>
+            <p class="text-muted small mb-0">Review issues raised by residents regarding society facilities and provide official resolutions</p>
+        </div>
+    </div>
+
+    <!-- Filter Pills Navigation -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="{{ url_for('view_complaints') }}" class="btn btn-sm rounded-pill px-3 {% if not current_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            All Complaints ({{ counts.all }})
+        </a>
+        <a href="{{ url_for('view_complaints', status='Pending') }}" class="btn btn-sm rounded-pill px-3 {% if current_filter == 'Pending' %}btn-warning text-white{% else %}btn-outline-warning{% endif %}">
+            <i class="fa-solid fa-hourglass-start me-1"></i> Pending ({{ counts.pending }})
+        </a>
+        <a href="{{ url_for('view_complaints', status='In Progress') }}" class="btn btn-sm rounded-pill px-3 {% if current_filter == 'In Progress' %}btn-info text-white{% else %}btn-outline-info{% endif %}">
+            <i class="fa-solid fa-spinner me-1"></i> In Progress ({{ counts.in_progress }})
+        </a>
+        <a href="{{ url_for('view_complaints', status='Resolved') }}" class="btn btn-sm rounded-pill px-3 {% if current_filter == 'Resolved' %}btn-success text-white{% else %}btn-outline-success{% endif %}">
+            <i class="fa-solid fa-check me-1"></i> Resolved ({{ counts.resolved }})
+        </a>
+    </div>
+
+    <!-- Complaints Cards List -->
+    {% if complaints %}
+        <div class="row g-4">
+            {% for c in complaints %}
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100 position-relative overflow-hidden">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-slate-100 text-slate-900 fw-bold border px-2 py-1 fs-6">
+                                <i class="fa-solid fa-door-open text-primary me-1"></i>Flat {{ c.flat_no or 'N/A' }}
+                            </span>
+                            <span class="fw-bold text-slate-800 small">{{ c.member_name }}</span>
+                        </div>
+
+                        <div>
+                            {% if c.status == 'Pending' %}
+                                <span class="badge badge-pill-status badge-status-pending"><i class="fa-solid fa-hourglass-start"></i> Pending</span>
+                            {% elif c.status == 'In Progress' %}
+                                <span class="badge badge-pill-status badge-status-in-progress"><i class="fa-solid fa-spinner"></i> In Progress</span>
+                            {% else %}
+                                <span class="badge badge-pill-status badge-status-resolved"><i class="fa-solid fa-check"></i> Resolved</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="mb-2">
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 text-xs mb-1">
+                                <i class="fa-solid fa-tag me-1"></i>{{ c.facility_name or 'General / Facility Amenity' }}
+                            </span>
+                            <h5 class="fw-bold text-slate-900 mt-1 mb-2">{{ c.subject }}</h5>
+                            <p class="text-muted small mb-3">{{ c.description }}</p>
+                        </div>
+
+                        <!-- Previous President Response if any -->
+                        {% if c.response %}
+                            <div class="p-3 bg-slate-50 rounded-3 border border-slate-200 small mb-3">
+                                <div class="fw-bold text-primary mb-1 d-flex justify-content-between">
+                                    <span><i class="fa-solid fa-reply me-1"></i>President Response:</span>
+                                    {% if c.resolved_at %}
+                                        <span class="text-xs text-muted">Resolved on {{ c.resolved_at[:10] }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-slate-700">{{ c.response }}</div>
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-auto pt-3 border-top border-slate-100">
+                            <!-- Update Complaint Inline Form -->
+                            <form method="POST" action="{{ url_for('update_complaint', complaint_id=c.id) }}">
+                                <div class="mb-2">
+                                    <label class="form-label text-xs text-muted mb-1 fw-bold">Update Status & Official Reply:</label>
+                                    <textarea name="response" class="form-control form-control-sm" rows="2" placeholder="Write instructions, technician updates, or resolution notes...">{{ c.response or '' }}</textarea>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label class="text-xs text-muted me-1">Status:</label>
+                                        <select name="status" class="form-select form-select-sm" style="width: 140px;">
+                                            <option value="Pending" {% if c.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                            <option value="In Progress" {% if c.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                            <option value="Resolved" {% if c.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary px-3 rounded-pill">
+                                        <i class="fa-solid fa-paper-plane me-1"></i> Update
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-slate-50 py-2 text-xs text-muted d-flex justify-content-between">
+                        <span><i class="fa-solid fa-clock me-1"></i>Raised: {{ c.created_at[:16] }}</span>
+                        {% if c.member_phone %}
+                            <span><i class="fa-solid fa-phone me-1"></i>{{ c.member_phone }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card p-5 text-center text-muted border-0 shadow-sm">
+            <i class="fa-solid fa-comments fs-1 text-slate-300 mb-3 d-block"></i>
+            <h5 class="fw-bold text-slate-700">No Complaints In This Category</h5>
+            <p class="small text-muted mb-0">No complaints matching the selected filter.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}My Complaints & Resolutions - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <a href="{{ url_for('member_dashboard') }}" class="text-decoration-none text-muted small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h2 class="fw-bold text-slate-900 mt-2 mb-1">
+                <i class="fa-solid fa-list-check text-warning me-2"></i>My Raised Complaints & Statuses
+            </h2>
+            <p class="text-muted small mb-0">Track all maintenance issues you have raised with the society administration</p>
+        </div>
+
+        <a href="{{ url_for('raise_complaint') }}" class="btn btn-warning rounded-pill px-4 shadow-sm text-white fw-bold">
+            <i class="fa-solid fa-plus-circle me-1"></i> Raise New Complaint
+        </a>
+    </div>
+
+    <!-- Complaints Cards -->
+    {% if complaints %}
+        <div class="row g-4">
+            {% for c in complaints %}
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100 position-relative overflow-hidden">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 text-xs">
+                            <i class="fa-solid fa-tag me-1"></i>{{ c.facility_name or 'General Issue' }}
+                        </span>
+
+                        <div>
+                            {% if c.status == 'Pending' %}
+                                <span class="badge badge-pill-status badge-status-pending"><i class="fa-solid fa-hourglass-start"></i> Pending</span>
+                            {% elif c.status == 'In Progress' %}
+                                <span class="badge badge-pill-status badge-status-in-progress"><i class="fa-solid fa-spinner fa-spin"></i> In Progress</span>
+                            {% else %}
+                                <span class="badge badge-pill-status badge-status-resolved"><i class="fa-solid fa-check"></i> Resolved</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4 d-flex flex-column">
+                        <h5 class="fw-bold text-slate-900 mb-2">{{ c.subject }}</h5>
+                        <p class="text-muted small mb-3 flex-grow-1">{{ c.description }}</p>
+
+                        <!-- President Response Highlight Card -->
+                        {% if c.response %}
+                            <div class="p-3 bg-emerald-subtle rounded-3 border border-emerald-200 small mt-auto mb-2">
+                                <div class="d-flex justify-content-between align-items-center fw-bold text-emerald mb-1">
+                                    <span><i class="fa-solid fa-reply-all me-1"></i>Official President Response:</span>
+                                    {% if c.resolved_at %}
+                                        <span class="text-xs text-muted">Resolved on {{ c.resolved_at[:10] }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-slate-800">{{ c.response }}</div>
+                            </div>
+                        {% else %}
+                            <div class="p-2 bg-slate-50 rounded border border-slate-200 small text-muted text-center mt-auto mb-2">
+                                <i class="fa-solid fa-clock me-1"></i> Awaiting president review and technician assignment.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-footer bg-slate-50 py-2 text-xs text-muted d-flex justify-content-between">
+                        <span><i class="fa-solid fa-calendar-plus me-1"></i>Lodged: {{ c.created_at[:16] }}</span>
+                        <span>Ticket #{{ c.id }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card p-5 text-center text-muted border-0 shadow-sm">
+            <i class="fa-solid fa-circle-check fs-1 text-success mb-3 d-block"></i>
+            <h5 class="fw-bold text-slate-700">No Complaints Logged</h5>
+            <p class="small text-muted mb-3">You haven't logged any complaints. If any facility needs attention, report it below.</p>
+            <div>
+                <a href="{{ url_for('raise_complaint') }}" class="btn btn-warning rounded-pill px-4 text-white fw-bold">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i> Raise a Complaint Ticket
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

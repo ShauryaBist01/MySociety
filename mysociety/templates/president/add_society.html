@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Society Details - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Title -->
+    <div class="mb-4">
+        <a href="{{ url_for('president_dashboard') }}" class="text-decoration-none text-muted small">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+        <h2 class="fw-bold text-slate-900 mt-2">
+            <i class="fa-solid fa-building-circle-check text-primary me-2"></i>Housing Society Setup
+        </h2>
+        <p class="text-muted small">Configure your cooperative housing society or apartment complex</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-slate-900">
+                        <i class="fa-solid fa-pen-to-square text-primary me-2"></i>Society Profile & Capacity
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('add_society') }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Society Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-slate-50 border-end-0 text-muted"><i class="fa-solid fa-building"></i></span>
+                                <input type="text" class="form-control border-start-0" id="name" name="name" placeholder="e.g. Greenfield Heights Cooperative Housing Society" required>
+                            </div>
+                            <small class="text-muted">The official registered name of your housing society.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Full Address <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-slate-50 border-end-0 text-muted"><i class="fa-solid fa-map-location-dot"></i></span>
+                                <textarea class="form-control border-start-0" id="address" name="address" rows="3" placeholder="Plot No, Street / Sector, Landmark, Pincode" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">City / Town <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-slate-50 border-end-0 text-muted"><i class="fa-solid fa-city"></i></span>
+                                    <input type="text" class="form-control border-start-0" id="city" name="city" placeholder="e.g. Mumbai, Pune, Delhi" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="total_flats" class="form-label">Total Flats / Units Capacity <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-slate-50 border-end-0 text-muted"><i class="fa-solid fa-hashtag"></i></span>
+                                    <input type="number" class="form-control border-start-0" id="total_flats" name="total_flats" min="1" placeholder="e.g. 50" required>
+                                </div>
+                                <small class="text-muted">Total number of residential units in all wings.</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ url_for('president_dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 shadow">
+                                <i class="fa-solid fa-check-circle me-1"></i> Save & Activate Society
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

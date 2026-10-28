@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+
+{% block title %}President Dashboard - {{ society.name if society else 'My Society' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header / Society Greeting -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 p-4 bg-white rounded-4 shadow-sm border border-slate-200">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-gradient px-3 py-1 rounded-pill text-xs">
+                    <i class="fa-solid fa-crown me-1"></i> Society President
+                </span>
+                <span class="text-muted small">• Admin Portal</span>
+            </div>
+            <h2 class="fw-bold mb-1 text-slate-900">
+                {{ society.name if society else 'Welcome, ' ~ session.user_name }}
+            </h2>
+            <p class="text-muted small mb-0">
+                {% if society %}
+                    <i class="fa-solid fa-location-dot text-danger me-1"></i> {{ society.address }}, {{ society.city }} 
+                    <span class="badge bg-slate-100 text-slate-700 ms-2 border"><i class="fa-solid fa-building me-1"></i> {{ society.total_flats }} Flats Capacity</span>
+                {% else %}
+                    <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> No society linked yet. Please register your society to begin management.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            {% if not society %}
+                <a href="{{ url_for('add_society') }}" class="btn btn-primary rounded-pill px-4 shadow">
+                    <i class="fa-solid fa-plus-circle me-1"></i> Add Society Details
+                </a>
+            {% else %}
+                <a href="{{ url_for('manage_facilities') }}" class="btn btn-outline-primary rounded-pill btn-sm px-3">
+                    <i class="fa-solid fa-plus me-1"></i> Add Facility
+                </a>
+                <a href="{{ url_for('maintenance_overview') }}" class="btn btn-primary rounded-pill btn-sm px-3 shadow-sm">
+                    <i class="fa-solid fa-calculator me-1"></i> Maintenance
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Alert Banner if No Society -->
+    {% if not society %}
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mb-4" role="alert">
+        <div class="d-flex align-items-center gap-3">
+            <div class="avatar-circle bg-warning text-white" style="width: 48px; height: 48px; font-size: 1.25rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5 class="fw-bold mb-1">First Step: Register Your Society</h5>
+                <p class="mb-0 text-muted small">You haven't set up your society yet. Create your society profile with its name, address, and flat count so residents can register.</p>
+            </div>
+            <a href="{{ url_for('add_society') }}" class="btn btn-warning text-white fw-bold px-4 rounded-pill">
+                <i class="fa-solid fa-plus-circle me-1"></i> Add Society Now
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 4 Key Stat Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Members Stat -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card-pro stat-card-blue">
+                <div>
+                    <div class="stat-val">{{ total_members }}</div>
+                    <div class="stat-lbl">Active Residents</div>
+                    <small class="text-primary fw-semibold"><i class="fa-solid fa-users me-1"></i> In Society</small>
+                </div>
+                <div class="stat-icon-wrapper icon-blue">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Facilities Stat -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card-pro stat-card-green">
+                <div>
+                    <div class="stat-val">{{ total_facilities }}</div>
+                    <div class="stat-lbl">Managed Facilities</div>
+                    <small class="text-success fw-semibold"><i class="fa-solid fa-dumbbell me-1"></i> Available to Opt</small>
+                </div>
+                <div class="stat-icon-wrapper icon-green">
+                    <i class="fa-solid fa-dumbbell"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complaints Stat -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card-pro stat-card-amber">
+                <div>
+                    <div class="stat-val">{{ pending_complaints }}</div>
+                    <div class="stat-lbl">Pending Complaints</div>
+                    <small class="text-warning fw-semibold"><i class="fa-solid fa-clock me-1"></i> {{ total_complaints }} Total Logged</small>
+                </div>
+                <div class="stat-icon-wrapper icon-amber">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Overview Stat -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card-pro stat-card-purple">
+                <div>
+                    <div class="stat-val">₹{{ "{:,.0f}".format(rev_paid) }}</div>
+                    <div class="stat-lbl">Collected (Month)</div>
+                    <small class="text-danger fw-semibold"><i class="fa-solid fa-hourglass-half me-1"></i> ₹{{ "{:,.0f}".format(rev_unpaid) }} Due</small>
+                </div>
+                <div class="stat-icon-wrapper icon-purple">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature 5 Highlight: Flat Status Occupancy Breakdown -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0 text-slate-900">
+                    <i class="fa-solid fa-house-chimney-window text-primary me-2"></i>Flat Status & Occupancy Overview
+                </h5>
+                <span class="text-muted small">Which flats are Owned, Rented, and Empty/Unsold</span>
+            </div>
+            <a href="{{ url_for('flat_status') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-table-list me-1"></i> Full Report
+            </a>
+        </div>
+        <div class="card-body">
+            <!-- Occupancy Progress Bar -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between text-xs text-muted fw-bold mb-1">
+                    <span>Occupancy Breakdown</span>
+                    <span>{{ occupancy_pct }}% Occupied</span>
+                </div>
+                <div class="occupancy-meter mb-2">
+                    {% set total_known = (owned_flats + rented_flats + empty_flats) or 1 %}
+                    {% set owned_w = ((owned_flats / total_known) * 100)|round(1) %}
+                    {% set rented_w = ((rented_flats / total_known) * 100)|round(1) %}
+                    {% set empty_w = ((empty_flats / total_known) * 100)|round(1) %}
+                    <div style="width: {{ owned_w }}%; background-color: #2563eb;" title="Owned: {{ owned_flats }}"></div>
+                    <div style="width: {{ rented_w }}%; background-color: #f59e0b;" title="Rented: {{ rented_flats }}"></div>
+                    <div style="width: {{ empty_w }}%; background-color: #94a3b8;" title="Empty: {{ empty_flats }}"></div>
+                </div>
+            </div>
+
+            <!-- 3 Colored Flat Status Summary Cards -->
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 rounded-3 bg-slate-50 border border-slate-200 text-center position-relative overflow-hidden">
+                        <span class="badge badge-pill-status badge-status-owned mb-2">
+                            <i class="fa-solid fa-user-check"></i> Owned Flats
+                        </span>
+                        <div class="stat-val text-primary">{{ owned_flats }}</div>
+                        <small class="text-muted d-block">Occupied by Owner</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded-3 bg-slate-50 border border-slate-200 text-center position-relative overflow-hidden">
+                        <span class="badge badge-pill-status badge-status-rented mb-2">
+                            <i class="fa-solid fa-key"></i> Rented Flats
+                        </span>
+                        <div class="stat-val text-warning">{{ rented_flats }}</div>
+                        <small class="text-muted d-block">Occupied by Tenants</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded-3 bg-slate-50 border border-slate-200 text-center position-relative overflow-hidden">
+                        <span class="badge badge-pill-status badge-status-empty mb-2">
+                            <i class="fa-solid fa-door-closed"></i> Empty / Unsold
+                        </span>
+                        <div class="stat-val text-secondary">{{ empty_flats }}</div>
+                        <small class="text-muted d-block">Vacant or Developer Inventory</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="fw-bold mb-0 text-slate-900">
+                <i class="fa-solid fa-bolt text-warning me-2"></i>Quick Management Actions
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="{{ url_for('add_society') }}" class="quick-action-tile">
+                        <i class="fa-solid fa-building-circle-arrow-right quick-action-icon text-primary"></i>
+                        <span>Edit Society</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="{{ url_for('manage_members') }}" class="quick-action-tile">
+                        <i class="fa-solid fa-users-gear quick-action-icon text-success"></i>
+                        <span>Members</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="{{ url_for('manage_facilities') }}" class="quick-action-tile">
+                        <i class="fa-solid fa-dumbbell quick-action-icon text-warning"></i>
+                        <span>Facilities</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="{{ url_for('facility_usage') }}" class="quick-action-tile">
+                        <i class="fa-solid fa-list-check quick-action-icon text-info"></i>
+                        <span>Facility Usage</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="{{ url_for('view_complaints') }}" class="quick-action-tile">
+                        <i class="fa-solid fa-comments quick-action-icon text-danger"></i>
+                        <span>Complaints ({{ pending_complaints }})</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="{{ url_for('maintenance_overview') }}" class="quick-action-tile">
+                        <i class="fa-solid fa-calculator quick-action-icon text-purple"></i>
+                        <span>Maintenance</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Split Grid: Recent Complaints & Members -->
+    <div class="row g-4">
+        <!-- Recent Complaints Column -->
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-900">
+                        <i class="fa-solid fa-comments text-danger me-2"></i>Recent Facility Complaints
+                    </h5>
+                    <a href="{{ url_for('view_complaints') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_complaints %}
+                        <div class="table-responsive">
+                            <table class="table table-pro">
+                                <thead>
+                                    <tr>
+                                        <th>Flat & Member</th>
+                                        <th>Subject / Facility</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in recent_complaints %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-slate-100 text-slate-800 fw-bold border">{{ c.flat_no or 'N/A' }}</span>
+                                            <div class="small fw-semibold mt-1">{{ c.member_name }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold text-slate-900">{{ c.subject }}</div>
+                                            <small class="text-muted"><i class="fa-solid fa-tag me-1"></i>{{ c.facility_name or 'General Issue' }}</small>
+                                        </td>
+                                        <td>
+                                            {% if c.status == 'Pending' %}
+                                                <span class="badge badge-pill-status badge-status-pending"><i class="fa-solid fa-hourglass-start"></i> Pending</span>
+                                            {% elif c.status == 'In Progress' %}
+                                                <span class="badge badge-pill-status badge-status-in-progress"><i class="fa-solid fa-spinner fa-spin"></i> In Progress</span>
+                                            {% else %}
+                                                <span class="badge badge-pill-status badge-status-resolved"><i class="fa-solid fa-check"></i> Resolved</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('view_complaints') }}" class="btn btn-sm btn-outline-primary py-1 px-2">
+                                                Respond
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fa-solid fa-circle-check fs-1 text-success mb-2"></i>
+                            <p class="mb-0">All clear! No member complaints registered.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Registered Members Column -->
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-900">
+                        <i class="fa-solid fa-users text-primary me-2"></i>Recent Members
+                    </h5>
+                    <a href="{{ url_for('manage_members') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        View Directory
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_members %}
+                        <div class="list-group list-group-flush">
+                            {% for m in recent_members %}
+                            <div class="list-group-item d-flex align-items-center justify-content-between p-3 border-bottom border-slate-100">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle" style="width: 36px; height: 36px;">
+                                        {{ m.name[:1]|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-slate-900 small">{{ m.name }}</div>
+                                        <div class="text-xs text-muted"><i class="fa-solid fa-phone me-1"></i>{{ m.phone or 'No phone' }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-slate-100 text-slate-800 fw-bold border mb-1">{{ m.flat_no or 'No Flat' }}</span>
+                                    <div>
+                                        {% if m.flat_status == 'owned' %}
+                                            <span class="badge badge-pill-status badge-status-owned text-xs py-0">Owned</span>
+                                        {% elif m.flat_status == 'rented' %}
+                                            <span class="badge badge-pill-status badge-status-rented text-xs py-0">Rented</span>
+                                        {% else %}
+                                            <span class="badge badge-pill-status badge-status-empty text-xs py-0">Empty</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fa-solid fa-user-clock fs-1 text-slate-300 mb-2"></i>
+                            <p class="mb-0">No residents registered yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

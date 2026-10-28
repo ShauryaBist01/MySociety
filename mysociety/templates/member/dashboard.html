@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Resident Portal - {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Resident Profile Greeting Card -->
+    <div class="p-4 bg-white rounded-4 shadow-sm border border-slate-200 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-circle" style="width: 56px; height: 56px; font-size: 1.5rem; background: linear-gradient(135deg, #10b981, #059669);">
+                    {{ user.name[:1]|upper }}
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h3 class="fw-bold mb-0 text-slate-900">{{ user.name }}</h3>
+                        <span class="badge bg-slate-100 text-slate-800 fw-bold border px-2 py-1 fs-6">
+                            <i class="fa-solid fa-door-open text-primary me-1"></i>Flat {{ session.flat_no or user.flat_no or 'Unassigned' }}
+                        </span>
+                        {% if user.flat_status == 'owned' %}
+                            <span class="badge badge-pill-status badge-status-owned"><i class="fa-solid fa-user-check"></i> Owned</span>
+                        {% elif user.flat_status == 'rented' %}
+                            <span class="badge badge-pill-status badge-status-rented"><i class="fa-solid fa-key"></i> Rented</span>
+                        {% else %}
+                            <span class="badge badge-pill-status badge-status-empty"><i class="fa-solid fa-door-closed"></i> Empty</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted small mb-0">
+                        <i class="fa-solid fa-building text-primary me-1"></i> <strong>{{ user.society_name or 'Greenfield Heights CHS' }}</strong>
+                        {% if user.society_city %} • {{ user.society_city }}{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Header Quick Action -->
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('raise_complaint') }}" class="btn btn-warning rounded-pill px-3 shadow-sm text-white">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i> Raise Complaint
+                </a>
+                <a href="{{ url_for('my_facilities') }}" class="btn btn-primary rounded-pill px-3 shadow-sm">
+                    <i class="fa-solid fa-dumbbell me-1"></i> Manage Facilities
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3 Big Metric Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Maintenance Bill Card -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-top: 4px solid #2563eb !important;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="stat-lbl mb-0">Current Maintenance</span>
+                        {% if curr_maintenance %}
+                            {% if curr_maintenance.paid_status == 'Paid' %}
+                                <span class="badge badge-pill-status badge-status-paid"><i class="fa-solid fa-check"></i> Paid</span>
+                            {% else %}
+                                <span class="badge badge-pill-status badge-status-unpaid"><i class="fa-solid fa-clock"></i> Due</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-slate-100 text-slate-700 border">Estimated</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="stat-val text-slate-900 mb-2">
+                        ₹{{ "{:,.2f}".format(curr_maintenance.total_amount if curr_maintenance else estimated_monthly) }}
+                    </div>
+
+                    <div class="p-2 rounded bg-slate-50 border border-slate-200 small text-muted mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Base Society Maintenance:</span>
+                            <span class="fw-semibold text-slate-700">₹{{ "{:,.0f}".format(base_amount) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Opted Facilities ({{ my_facilities|length }}):</span>
+                            <span class="fw-semibold text-slate-700">+₹{{ "{:,.0f}".format(total_facility_cost) }}</span>
+                        </div>
+                    </div>
+
+                    {% if curr_maintenance and curr_maintenance.paid_status != 'Paid' %}
+                        <form method="POST" action="{{ url_for('pay_maintenance', maintenance_id=curr_maintenance.id) }}">
+                            <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold">
+                                <i class="fa-solid fa-credit-card me-1"></i> Pay Now (₹{{ curr_maintenance.total_amount }})
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{{ url_for('my_maintenance') }}" class="btn btn-outline-primary w-100 rounded-pill">
+                            <i class="fa-solid fa-file-invoice me-1"></i> View Detailed Bill & History
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Opted Amenities Card -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-top: 4px solid #10b981 !important;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="stat-lbl mb-0">Active Amenities</span>
+                        <span class="badge bg-emerald-subtle text-emerald rounded-pill px-2 py-1 text-xs">
+                            <i class="fa-solid fa-check-double me-1"></i> Subscribed
+                        </span>
+                    </div>
+
+                    <div class="stat-val text-slate-900 mb-2">
+                        {{ my_facilities|length }} <span class="fs-5 text-muted fw-normal">Facilities</span>
+                    </div>
+
+                    <p class="text-muted small mb-3">
+                        You have subscribed to {{ my_facilities|length }} society amenities. Charges are added directly to your monthly flat maintenance bill.
+                    </p>
+
+                    <div class="d-grid mt-auto">
+                        <a href="{{ url_for('my_facilities') }}" class="btn btn-outline-success w-100 rounded-pill">
+                            <i class="fa-solid fa-sliders me-1"></i> Opt-in / Opt-out Amenities
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complaints Status Card -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-top: 4px solid #f59e0b !important;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="stat-lbl mb-0">Complaints Logged</span>
+                        {% if pending_complaints > 0 %}
+                            <span class="badge badge-pill-status badge-status-pending">{{ pending_complaints }} Open</span>
+                        {% else %}
+                            <span class="badge badge-pill-status badge-status-resolved">All Clear</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="stat-val text-slate-900 mb-2">
+                        {{ total_complaints }} <span class="fs-5 text-muted fw-normal">Total Tickets</span>
+                    </div>
+
+                    <p class="text-muted small mb-3">
+                        Any issue with parking, pool, gym, or general society maintenance? Submit a ticket for the President.
+                    </p>
+
+                    <div class="d-grid mt-auto">
+                        <a href="{{ url_for('my_complaints') }}" class="btn btn-outline-warning w-100 rounded-pill">
+                            <i class="fa-solid fa-list-check me-1"></i> View Ticket Statuses
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Row -->
+    <div class="card mb-4">
+        <div class="card-body py-3">
+            <div class="row g-2 text-center">
+                <div class="col-3">
+                    <a href="{{ url_for('my_facilities') }}" class="text-decoration-none text-slate-700 hover-primary d-block p-2 rounded hover-bg-slate">
+                        <i class="fa-solid fa-dumbbell text-success fs-4 d-block mb-1"></i>
+                        <span class="small fw-semibold">Amenities</span>
+                    </a>
+                </div>
+                <div class="col-3">
+                    <a href="{{ url_for('my_maintenance') }}" class="text-decoration-none text-slate-700 hover-primary d-block p-2 rounded hover-bg-slate">
+                        <i class="fa-solid fa-receipt text-primary fs-4 d-block mb-1"></i>
+                        <span class="small fw-semibold">My Bill</span>
+                    </a>
+                </div>
+                <div class="col-3">
+                    <a href="{{ url_for('raise_complaint') }}" class="text-decoration-none text-slate-700 hover-primary d-block p-2 rounded hover-bg-slate">
+                        <i class="fa-solid fa-circle-exclamation text-warning fs-4 d-block mb-1"></i>
+                        <span class="small fw-semibold">Raise Ticket</span>
+                    </a>
+                </div>
+                <div class="col-3">
+                    <a href="{{ url_for('my_complaints') }}" class="text-decoration-none text-slate-700 hover-primary d-block p-2 rounded hover-bg-slate">
+                        <i class="fa-solid fa-comments text-info fs-4 d-block mb-1"></i>
+                        <span class="small fw-semibold">My Tickets</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Split Grid: My Subscribed Facilities & Recent Complaints -->
+    <div class="row g-4">
+        <!-- Subscribed Facilities List -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-900">
+                        <i class="fa-solid fa-dumbbell text-primary me-2"></i>My Subscribed Facilities
+                    </h5>
+                    <a href="{{ url_for('my_facilities') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        Modify
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if my_facilities %}
+                        <div class="list-group list-group-flush">
+                            {% for f in my_facilities %}
+                            <div class="list-group-item d-flex align-items-center justify-content-between p-3 border-bottom border-slate-100">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle icon-blue" style="width: 40px; height: 40px; border-radius: 10px;">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-slate-900">{{ f.name }}</h6>
+                                        <small class="text-muted"><i class="fa-solid fa-calendar me-1"></i>Since {{ f.availed_date[:10] }}</small>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold text-primary">₹{{ "{:,.2f}".format(f.monthly_cost) }}</span>
+                                    <small class="text-muted d-block">/ month</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="p-3 bg-slate-50 text-end border-top border-slate-200">
+                            <span class="text-muted small me-2">Total Monthly Facility Fee:</span>
+                            <span class="fw-bold text-slate-900 fs-6">₹{{ "{:,.2f}".format(total_facility_cost) }}</span>
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fa-solid fa-dumbbell fs-1 text-slate-300 mb-2"></i>
+                            <p class="mb-2">You haven't opted for any paid society facilities yet.</p>
+                            <a href="{{ url_for('my_facilities') }}" class="btn btn-sm btn-primary rounded-pill px-3">
+                                Browse Facilities (Gym, Pool, Parking)
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Complaints Status -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-900">
+                        <i class="fa-solid fa-circle-exclamation text-warning me-2"></i>My Recent Complaints
+                    </h5>
+                    <a href="{{ url_for('my_complaints') }}" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_complaints %}
+                        <div class="list-group list-group-flush">
+                            {% for c in recent_complaints %}
+                            <div class="list-group-item p-3 border-bottom border-slate-100">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="fw-bold text-slate-900 mb-0">{{ c.subject }}</h6>
+                                    {% if c.status == 'Pending' %}
+                                        <span class="badge badge-pill-status badge-status-pending">Pending</span>
+                                    {% elif c.status == 'In Progress' %}
+                                        <span class="badge badge-pill-status badge-status-in-progress">In Progress</span>
+                                    {% else %}
+                                        <span class="badge badge-pill-status badge-status-resolved">Resolved</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-muted small mb-2">{{ c.description|truncate(80) }}</p>
+                                
+                                {% if c.response %}
+                                    <div class="p-2 bg-slate-50 rounded border border-slate-200 small">
+                                        <div class="fw-bold text-primary mb-1"><i class="fa-solid fa-reply me-1"></i>President Response:</div>
+                                        <div class="text-slate-700">{{ c.response }}</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fa-solid fa-circle-check fs-1 text-success mb-2"></i>
+                            <p class="mb-2">No complaints lodged. Everything running smoothly!</p>
+                            <a href="{{ url_for('raise_complaint') }}" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                                Report an Issue
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

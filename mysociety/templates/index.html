@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Smart Society Management Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-gradient-wrapper">
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center gy-5">
+            <!-- Left Hero Content -->
+            <div class="col-lg-7 text-center text-lg-start">
+                <div class="hero-pill-badge">
+                    <i class="fa-solid fa-sparkles text-warning"></i> Next-Gen Housing Society Platform
+                </div>
+                <h1 class="hero-heading">
+                    Effortless Living with <br>
+                    <span class="hero-highlight">Smart Society Management</span>
+                </h1>
+                <p class="hero-subtext">
+                    Say goodbye to manual registers and confusing billing. Automate maintenance calculation based on opted facilities, track flat occupancy, resolve complaints transparently, and empower both society presidents and residents with dedicated modern dashboards.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                    {% if session.user_id %}
+                        {% if session.role == 'president' %}
+                            <a href="{{ url_for('president_dashboard') }}" class="btn btn-primary btn-lg px-4 shadow">
+                                <i class="fa-solid fa-gauge-high"></i> Open President Dashboard
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('member_dashboard') }}" class="btn btn-primary btn-lg px-4 shadow">
+                                <i class="fa-solid fa-gauge"></i> Open Resident Portal
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 shadow">
+                            <i class="fa-solid fa-user-plus"></i> Get Started Free
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fa-solid fa-right-to-bracket"></i> Resident Login
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Trust Micro-stats -->
+                <div class="row mt-5 pt-3 border-top border-slate-700 text-center text-lg-start g-3">
+                    <div class="col-4">
+                        <div class="fw-bold text-white fs-4">{{ societies_count|default(1) }}+</div>
+                        <div class="text-xs text-slate-400 text-uppercase">Societies Live</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold text-white fs-4">{{ members_count|default(5) }}+</div>
+                        <div class="text-xs text-slate-400 text-uppercase">Happy Residents</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold text-white fs-4">100%</div>
+                        <div class="text-xs text-slate-400 text-uppercase">Billing Accuracy</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Hero Interactive Snapshot Preview Card -->
+            <div class="col-lg-5">
+                <div class="hero-preview-card text-white">
+                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom border-slate-700">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="brand-icon-wrapper" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                <i class="fa-solid fa-building-circle-check"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-white">{{ sample_society.name if sample_society else 'Greenfield Heights CHS' }}</h6>
+                                <span class="text-xs text-slate-400">{{ sample_society.city if sample_society else 'Mumbai' }} • Live Dashboard</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-emerald-subtle text-emerald rounded-pill px-2 py-1 text-xs">
+                            <i class="fa-solid fa-circle text-xs me-1"></i> Active
+                        </span>
+                    </div>
+
+                    <!-- Live KPI Preview Pills inside Card -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="p-2 rounded-3 bg-dark-slate border border-slate-700">
+                                <span class="text-xs text-slate-400 d-block">Base Monthly Fee</span>
+                                <span class="fw-bold text-white fs-6">₹500 / flat</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded-3 bg-dark-slate border border-slate-700">
+                                <span class="text-xs text-slate-400 d-block">Active Amenities</span>
+                                <span class="fw-bold text-emerald fs-6">{{ facilities_count|default(4) }} Managed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini Bill Calculation Sample -->
+                    <div class="p-3 rounded-3 bg-dark-slate border border-slate-700 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1 text-xs text-slate-400">
+                            <span>Sample Maintenance Formula</span>
+                            <span class="text-white fw-semibold">Flat A-101</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-slate-300 py-1 border-bottom border-slate-800">
+                            <span>Base Society Maintenance</span>
+                            <span>₹500</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-slate-300 py-1 border-bottom border-slate-800">
+                            <span>Swimming Pool & Gym (Opted)</span>
+                            <span>+₹1,050</span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold text-white pt-2">
+                            <span>Total Due This Month</span>
+                            <span class="text-emerald">₹1,550</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Demo Shortcut Buttons -->
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('quick_login', role='president') }}" class="btn btn-primary btn-sm py-2">
+                            <i class="fa-solid fa-user-shield me-1"></i> Try Demo as President
+                        </a>
+                        <a href="{{ url_for('quick_login', role='member') }}" class="btn btn-outline-light btn-sm py-2">
+                            <i class="fa-solid fa-user me-1"></i> Try Demo as Resident (Rahul - A-202)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 6 Core Required Features Section -->
+<section class="py-5 bg-white">
+    <div class="container py-4">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge bg-primary-subtle text-primary fw-bold text-uppercase px-3 py-2 rounded-pill text-xs mb-2">Built For Modern Communities</span>
+            <h2 class="display-6 fw-extrabold text-slate-900">Everything Your Society Needs, Fully Digitized</h2>
+            <p class="text-muted fs-6">Engineered specifically to solve the core challenges of housing societies and residential complexes.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Feature 1: Add Society -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon-bubble icon-blue">
+                        <i class="fa-solid fa-city"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">1. Add & Manage Society</h5>
+                    <p class="text-muted small mb-0">Presidents can create their society profile, set total flat capacity, address, and manage the central society administration digitally.</p>
+                </div>
+            </div>
+
+            <!-- Feature 2: Calculate Maintenance -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon-bubble icon-green">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">2. Dynamic Maintenance Calculator</h5>
+                    <p class="text-muted small mb-0">Automated calculation logic combining fixed base charges (₹500) plus exact monthly fees for only the facilities opted by each flat.</p>
+                </div>
+            </div>
+
+            <!-- Feature 3: Complaint System -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon-bubble icon-rose">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">3. Facility Complaint Ticketing</h5>
+                    <p class="text-muted small mb-0">Residents easily log complaints linked directly to facilities. Presidents review, update statuses (Pending, In Progress, Resolved), and reply.</p>
+                </div>
+            </div>
+
+            <!-- Feature 4: Facility Tracking -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon-bubble icon-purple">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">4. Facility-to-Flat Availment</h5>
+                    <p class="text-muted small mb-0">Total transparency on which amenity (Gym, Pool, Parking, Clubhouse) has been availed by which flat, complete with resident names and dates.</p>
+                </div>
+            </div>
+
+            <!-- Feature 5: Flat Status -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon-bubble icon-amber">
+                        <i class="fa-solid fa-house-chimney-user"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">5. Flat Occupancy Tracking</h5>
+                    <p class="text-muted small mb-0">Live real-time visibility into which flats are <strong>Owned</strong>, which are <strong>Rented</strong>, and which are <strong>Empty/Unsold</strong> across the society.</p>
+                </div>
+            </div>
+
+            <!-- Feature 6: Dual Role Dashboards -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-box">
+                    <div class="feature-icon-bubble icon-blue">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">6. President & Member Dashboards</h5>
+                    <p class="text-muted small mb-0">President gets high-level analytics, member management, and billing tools; residents enjoy self-service amenity selection and bill viewing.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-slate-50 border-top border-slate-200">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <span class="badge bg-secondary-subtle text-secondary fw-bold text-uppercase px-3 py-2 rounded-pill text-xs mb-2">Simple 3-Step Flow</span>
+            <h2 class="display-6 fw-extrabold text-slate-900">How My Society Operates</h2>
+        </div>
+
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="card p-4 h-100 border-0 shadow-sm">
+                    <div class="avatar-circle mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.25rem;">1</div>
+                    <h5 class="fw-bold">Register Society & Amenities</h5>
+                    <p class="text-muted small">President sets up the society, defines facilities (Pool, Gym, Parking), and sets monthly subscription fees.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-4 h-100 border-0 shadow-sm">
+                    <div class="avatar-circle mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.25rem; background: linear-gradient(135deg, #10b981, #059669);">2</div>
+                    <h5 class="fw-bold">Residents Join & Opt In</h5>
+                    <p class="text-muted small">Residents register with flat details, choose their desired amenities, or opt out at any time through their portal.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-4 h-100 border-0 shadow-sm">
+                    <div class="avatar-circle mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.25rem; background: linear-gradient(135deg, #f59e0b, #d97706);">3</div>
+                    <h5 class="fw-bold">Automated Bills & Support</h5>
+                    <p class="text-muted small">System calculates maintenance dynamically. Members raise tickets for faulty amenities and pay bills effortlessly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="py-5 bg-dark-slate text-white text-center">
+    <div class="container py-3">
+        <h2 class="display-6 fw-bold mb-3 text-white">Ready to Modernize Your Housing Society?</h2>
+        <p class="text-slate-400 fs-6 max-w-600 mx-auto mb-4">Start managing your community with modern digital tools today.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg rounded-pill px-4 shadow">
+                <i class="fa-solid fa-plus-circle me-1"></i> Register Your Society
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg rounded-pill px-4">
+                <i class="fa-solid fa-sign-in me-1"></i> Member Sign In
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

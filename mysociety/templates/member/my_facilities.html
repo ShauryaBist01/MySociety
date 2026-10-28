@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Society Facilities & Amenities - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <a href="{{ url_for('member_dashboard') }}" class="text-decoration-none text-muted small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h2 class="fw-bold text-slate-900 mt-2 mb-1">
+                <i class="fa-solid fa-dumbbell text-success me-2"></i>Society Amenities Marketplace
+            </h2>
+            <p class="text-muted small mb-0">Opt-in or opt-out of society facilities. Your monthly maintenance dynamically updates based on your selections.</p>
+        </div>
+
+        <div class="p-3 bg-white rounded-4 shadow-sm border border-slate-200 d-flex align-items-center gap-3">
+            <div>
+                <span class="text-xs text-muted d-block text-uppercase fw-bold">Active Subscriptions</span>
+                <span class="fw-bold text-primary fs-5">{{ my_facilities|length }} Amenities</span>
+            </div>
+            <div class="border-start ps-3">
+                <span class="text-xs text-muted d-block text-uppercase fw-bold">Facility Total</span>
+                <span class="fw-bold text-success fs-5">₹{{ "{:,.2f}".format(total_opted_cost) }} / mo</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Subscriptions Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+            <h5 class="fw-bold mb-0 text-slate-900">
+                <i class="fa-solid fa-circle-check text-success me-2"></i>My Active Subscriptions ({{ my_facilities|length }})
+            </h5>
+            <span class="text-muted small">Charges applied to Flat {{ session.flat_no or 'your flat' }}</span>
+        </div>
+        <div class="card-body p-4">
+            {% if my_facilities %}
+                <div class="row g-3">
+                    {% for f in my_facilities %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="p-3 rounded-4 bg-slate-50 border border-emerald-200 position-relative h-100 d-flex flex-column" style="border-left: 4px solid #10b981 !important;">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="fw-bold text-slate-900 mb-0">{{ f.name }}</h5>
+                                <span class="badge bg-emerald-subtle text-emerald rounded-pill px-2 py-1 text-xs">
+                                    <i class="fa-solid fa-check me-1"></i>Active
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-3 flex-grow-1">{{ f.description or 'Society amenity with verified resident access.' }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top border-slate-200">
+                                <div>
+                                    <span class="fw-bold text-primary fs-5">₹{{ "{:,.2f}".format(f.monthly_cost) }}</span>
+                                    <span class="text-xs text-muted">/ month</span>
+                                </div>
+                                <form method="POST" action="{{ url_for('my_facilities') }}">
+                                    <input type="hidden" name="facility_id" value="{{ f.id }}">
+                                    <input type="hidden" name="action" value="remove">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Cancel subscription to {{ f.name }}?');">
+                                        <i class="fa-solid fa-xmark me-1"></i> Opt Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="fa-solid fa-dumbbell fs-1 text-slate-300 mb-2 d-block"></i>
+                    <p class="mb-0">You have not subscribed to any extra facilities yet. Browse available amenities below to opt in!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Browse Available Amenities Section -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="fw-bold mb-0 text-slate-900">
+                <i class="fa-solid fa-store text-primary me-2"></i>All Available Society Amenities
+            </h5>
+            <span class="text-muted small">Select an amenity to opt in. Fees will automatically reflect on your monthly invoice.</span>
+        </div>
+        <div class="card-body p-4">
+            {% if all_facilities %}
+                <div class="row g-4">
+                    {% for f in all_facilities %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border border-slate-200 rounded-4 overflow-hidden card-hoverable">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div class="avatar-circle icon-blue" style="width: 44px; height: 44px; font-size: 1.25rem;">
+                                        <i class="fa-solid fa-building-circle-check"></i>
+                                    </div>
+                                    <span class="fw-bold text-primary fs-4">
+                                        ₹{{ "{:,.2f}".format(f.monthly_cost) }}
+                                        <span class="text-xs text-muted fw-normal">/ mo</span>
+                                    </span>
+                                </div>
+
+                                <h5 class="fw-bold text-slate-900 mb-2">{{ f.name }}</h5>
+                                <p class="text-muted small flex-grow-1 mb-3">
+                                    {{ f.description or 'Full member access included for you and family members residing in this flat.' }}
+                                </p>
+
+                                <div class="mt-auto pt-3 border-top border-slate-100">
+                                    {% if f.id in my_facility_ids %}
+                                        <button class="btn btn-outline-success w-100 rounded-pill" disabled>
+                                            <i class="fa-solid fa-circle-check me-1"></i> Already Subscribed
+                                        </button>
+                                    {% else %}
+                                        <form method="POST" action="{{ url_for('my_facilities') }}">
+                                            <input type="hidden" name="facility_id" value="{{ f.id }}">
+                                            <input type="hidden" name="action" value="add">
+                                            <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm">
+                                                <i class="fa-solid fa-plus-circle me-1"></i> Opt In to Facility
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-5 text-center text-muted">
+                    <p class="mb-0">No facilities have been registered by the society president yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

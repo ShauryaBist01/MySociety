@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Society Members - My Society{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <a href="{{ url_for('president_dashboard') }}" class="text-decoration-none text-muted small">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h2 class="fw-bold text-slate-900 mt-2 mb-1">
+                <i class="fa-solid fa-users text-primary me-2"></i>Society Residents & Flats Directory
+            </h2>
+            <p class="text-muted small mb-0">View all registered members, update flat numbers, and manage occupancy status</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-gradient rounded-pill px-3 py-2 fs-6">
+                <i class="fa-solid fa-user-group me-1"></i> {{ members|length }} Registered
+            </span>
+        </div>
+    </div>
+
+    <!-- Members Table Card -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-slate-900">
+                <i class="fa-solid fa-address-book text-primary me-2"></i>Residents List
+            </h5>
+            <span class="text-muted small">Update occupancy: Owned • Rented • Empty</span>
+        </div>
+        <div class="card-body p-0">
+            {% if members %}
+                <div class="table-responsive">
+                    <table class="table table-pro">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Flat No</th>
+                                <th>Resident Name & Contact</th>
+                                <th>Occupancy Status</th>
+                                <th>Amenities Opted</th>
+                                <th>Registered On</th>
+                                <th class="text-end">Manage Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in members %}
+                            <tr>
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge bg-slate-100 text-slate-900 fw-bold border px-2 py-1 fs-6">
+                                        <i class="fa-solid fa-door-open text-primary me-1"></i>{{ m.flat_no or 'Unassigned' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-circle" style="width: 34px; height: 34px;">
+                                            {{ m.name[:1]|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-slate-900">{{ m.name }}</div>
+                                            <div class="text-xs text-muted">
+                                                <i class="fa-solid fa-envelope me-1"></i>{{ m.email }} 
+                                                {% if m.phone %} • <i class="fa-solid fa-phone me-1"></i>{{ m.phone }}{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if m.flat_status == 'owned' %}
+                                        <span class="badge badge-pill-status badge-status-owned">
+                                            <i class="fa-solid fa-user-check"></i> Owned
+                                        </span>
+                                    {% elif m.flat_status == 'rented' %}
+                                        <span class="badge badge-pill-status badge-status-rented">
+                                            <i class="fa-solid fa-key"></i> Rented
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-pill-status badge-status-empty">
+                                            <i class="fa-solid fa-door-closed"></i> Empty / Unsold
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-emerald-subtle text-emerald rounded-pill px-2 py-1 fw-bold text-xs">
+                                        <i class="fa-solid fa-dumbbell me-1"></i>{{ m.facility_count|default(0) }} Opted
+                                    </span>
+                                </td>
+                                <td class="text-muted small">
+                                    {{ m.created_at[:10] if m.created_at else 'Active' }}
+                                </td>
+                                <td class="text-end">
+                                    <form method="POST" action="{{ url_for('update_member_status', member_id=m.id) }}" class="d-inline-flex align-items-center gap-2">
+                                        <input type="text" name="flat_no" value="{{ m.flat_no or '' }}" placeholder="Flat" class="form-control form-control-sm text-center" style="width: 80px;" title="Update Flat No">
+                                        <select name="flat_status" class="form-select form-select-sm" style="width: 110px;">
+                                            <option value="owned" {% if m.flat_status == 'owned' %}selected{% endif %}>Owned</option>
+                                            <option value="rented" {% if m.flat_status == 'rented' %}selected{% endif %}>Rented</option>
+                                            <option value="empty" {% if m.flat_status == 'empty' %}selected{% endif %}>Empty</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary py-1 px-2" title="Save Changes">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                        <a href="{{ url_for('delete_member', member_id=m.id) }}" class="btn btn-sm btn-outline-danger py-1 px-2" onclick="return confirm('Remove resident {{ m.name }} from the society?');" title="Remove Member">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-5 text-center text-muted">
+                    <i class="fa-solid fa-users fs-1 text-slate-300 mb-3 d-block"></i>
+                    <h5 class="fw-bold text-slate-700">No Members Registered Yet</h5>
+                    <p class="small text-muted mb-0">Share your society name with residents so they can register their account.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
